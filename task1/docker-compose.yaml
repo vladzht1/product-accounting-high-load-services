@@ -1,0 +1,65 @@
+services:
+  postgres:
+    container_name: products_postgres
+    image: postgres:16.2-alpine3.18
+    environment:
+      POSTGRES_DB: ${PG_DATABASE}
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASS}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - products_postgres_volume:/var/lib/postgresql/data
+    ports:
+      - ${PG_PORT}:${PG_PORT}
+    expose:
+      - ${PG_PORT}
+    command: -p ${PG_PORT}
+    restart: unless-stopped
+
+  rabbitmq:
+    container_name: products_rabbitmq
+    image: rabbitmq:latest
+    hostname: rabbitmq
+    # network_mode: host
+    networks:
+      - products_network
+    ports:
+      - 5672:5672
+    restart: unless-stopped
+
+  product-remains:
+    container_name: products_product-remains
+    build: ./packages/product-remains
+    volumes:
+      - ./packages/shared:/shared
+    # networks:
+    #   - products_network
+    # ports:
+    #   - ${REMAINS_SERVICE_PORT}:${REMAINS_SERVICE_PORT}
+    network_mode: host
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
+  product-events:
+    container_name: products_product-events
+    build: ./packages/product-events
+    volumes:
+      - ./packages/shared:/shared
+    # networks:
+    #   - products_network
+    network_mode: host
+    ports:
+      - ${EVENTS_SERVICE_PORT}:${EVENTS_SERVICE_PORT}
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
+volumes:
+  products_postgres_volume:
+
+networks:
+  products_network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
