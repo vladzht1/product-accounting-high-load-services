@@ -1,0 +1,6 @@
+services:
+  application:
+    container_name: users_application
+    build: .
+    network_mode: host
+    restart: unless-stopped

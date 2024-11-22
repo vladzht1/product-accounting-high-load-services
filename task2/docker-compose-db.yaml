@@ -1,0 +1,20 @@
+services:
+  postgres:
+    container_name: users_postgres
+    image: postgres:16.2-alpine3.18
+    environment:
+      POSTGRES_DB: ${PG_DATABASE}
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASS}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - db_volume:/var/lib/postgresql/data
+    ports:
+      - ${PG_PORT}:${PG_PORT}
+    expose:
+      - ${PG_PORT}
+    command: -p ${PG_PORT}
+    restart: unless-stopped
+
+volumes:
+  db_volume:
